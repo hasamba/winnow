@@ -21,7 +21,8 @@ collapses are ones whose text is character-for-character identical.
 ## Install
 
 ```bash
-cd /home/hasamba/Projects/timeline-triage
+git clone https://github.com/hasamba/timeline-triage.git
+cd timeline-triage
 npm install
 npm run build
 ```
@@ -114,3 +115,7 @@ the same command; it continues where it stopped and re-judges nothing.
 The parser, the CSV safety escaping and the four narrator providers are shaped after DFIR
 Companion's own, so this folds back into that project as an importer plus an analysis pass
 once the triage accuracy is proven.
+
+## Licence
+
+AGPL-3.0, matching DFIR Companion, which this is intended to fold into.
