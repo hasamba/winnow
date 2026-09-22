@@ -1,7 +1,7 @@
 node_modules/
 dist/
 *.tsbuildinfo
-*.triage.sqlite
+*.winnow.sqlite
 *.malicious.csv
 *.narrative.md
 *.run.json

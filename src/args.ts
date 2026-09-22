@@ -72,17 +72,17 @@ export function flagBool(
   return flags[name] === true || flags[name] === "true";
 }
 
-export const USAGE = `timeline-triage — grade a Plaso supertimeline row by row, then narrate what survives.
+export const USAGE = `winnow — separate the grain from the chaff in a Plaso supertimeline.
 
-  triage scan    <timeline.csv>    Count rows and distinct entries, estimate cost. Free, offline.
-  triage sample  <timeline.csv>    Judge a small random sample to check the questions. Cents.
-  triage judge   <timeline.csv>    Ask Jev about every distinct entry. Resumable.
-  triage export  <timeline.csv>    Write the malicious CSV and the run manifest.
-  triage narrate <malicious.csv>   Have a second model write what happened.
-  triage run     <timeline.csv>    scan, judge, export and narrate in one go.
+  winnow scan    <timeline.csv>    Count rows and distinct entries, estimate cost. Free, offline.
+  winnow sample  <timeline.csv>    Judge a small random sample to check the questions. Cents.
+  winnow judge   <timeline.csv>    Ask Jev about every distinct entry. Resumable.
+  winnow export  <timeline.csv>    Write the malicious CSV and the run manifest.
+  winnow narrate <malicious.csv>   Have a second model write what happened.
+  winnow run     <timeline.csv>    scan, judge, export and narrate in one go.
 
 Common flags
-  --db <path>            Decision cache location (default: <timeline>.triage.sqlite)
+  --db <path>            Decision cache location (default: <timeline>.winnow.sqlite)
   --questions <path>     Question set (default: the bundled questions.json)
   --workers <n>          Parallel Jev calls (default: 16)
   --rare-first           Judge the least-repeated entries first

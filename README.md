@@ -1,4 +1,6 @@
-# timeline-triage
+# winnow
+
+*To winnow is to separate grain from chaff by blowing the light stuff away.*
 
 Grade a Plaso supertimeline row by row with a cheap decision model, then have a stronger
 model write what happened.
@@ -21,8 +23,8 @@ collapses are ones whose text is character-for-character identical.
 ## Install
 
 ```bash
-git clone https://github.com/hasamba/timeline-triage.git
-cd timeline-triage
+git clone https://github.com/hasamba/winnow.git
+cd winnow
 npm install
 npm run build
 ```
@@ -71,7 +73,7 @@ Or all of it at once:
 npx tsx src/cli.ts run /path/to/timeline.csv --narrator claude-api --yes
 ```
 
-`triage help` lists every flag.
+`winnow help` lists every flag.
 
 ## What you get
 

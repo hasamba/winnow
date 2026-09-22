@@ -30,7 +30,7 @@ function requireFile(args: ParsedArgs): string {
 }
 
 function dbPathFor(args: ParsedArgs, file: string): string {
-  return flagString(args.flags, "db") ?? `${file}.triage.sqlite`;
+  return flagString(args.flags, "db") ?? `${file}.winnow.sqlite`;
 }
 
 function thresholdsFrom(args: ParsedArgs): Thresholds {

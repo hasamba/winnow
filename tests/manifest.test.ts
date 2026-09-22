@@ -30,7 +30,7 @@ afterEach(() => {
 
 function inputs(over: Partial<ManifestInputs> = {}): ManifestInputs {
   const base: ManifestInputs = {
-    toolName: "timeline-triage",
+    toolName: "winnow",
     toolVersion: "0.1.0",
     model: "typesafe/jev-1.13",
     questionsText: '{"malicious": {"type": "noul"}}',
@@ -79,7 +79,7 @@ describe("sha256File", () => {
 describe("readToolInfo", () => {
   it("reads the tool name and version from package.json", async () => {
     const info = await readToolInfo();
-    expect(info.name).toBe("timeline-triage");
+    expect(info.name).toBe("winnow");
     expect(info.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 });
@@ -87,7 +87,7 @@ describe("readToolInfo", () => {
 describe("buildManifest", () => {
   it("records every field the run needs to be reproducible", () => {
     const m = buildManifest(inputs());
-    expect(m.tool).toBe("timeline-triage");
+    expect(m.tool).toBe("winnow");
     expect(m.version).toBe("0.1.0");
     expect(m.jevModel).toBe("typesafe/jev-1.13");
     expect(m.questionsText).toContain("malicious");

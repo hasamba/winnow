@@ -1,10 +1,10 @@
 {
-  "name": "timeline-triage",
+  "name": "winnow",
   "version": "0.1.0",
-  "description": "Triage a Plaso supertimeline row by row with Jev, then narrate what survives.",
+  "description": "Separate the grain from the chaff in a Plaso supertimeline: grade every row with a decision model, then narrate what survives.",
   "type": "module",
   "bin": {
-    "triage": "./dist/cli.js"
+    "winnow": "./dist/cli.js"
   },
   "engines": {
     "node": ">=20"
@@ -13,7 +13,7 @@
     "build": "tsc",
     "typecheck": "tsc -p tsconfig.typecheck.json",
     "test": "vitest run",
-    "triage": "tsx src/cli.ts"
+    "winnow": "tsx src/cli.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0"
