@@ -7,7 +7,7 @@ export interface ParsedArgs {
   readonly flags: Readonly<Record<string, string | boolean>>;
 }
 
-const KNOWN_COMMANDS = ["scan", "sample", "judge", "export", "narrate", "run", "help"] as const;
+const KNOWN_COMMANDS = ["serve", "scan", "sample", "judge", "export", "narrate", "run", "help"] as const;
 export type Command = (typeof KNOWN_COMMANDS)[number];
 
 export function isCommand(v: string): v is Command {
@@ -74,6 +74,7 @@ export function flagBool(
 
 export const USAGE = `winnow — separate the grain from the chaff in a Plaso supertimeline.
 
+  winnow serve                     Open the dashboard in a browser. Everything below, with a UI.
   winnow scan    <timeline.csv>    Count rows and distinct entries, estimate cost. Free, offline.
   winnow sample  <timeline.csv>    Judge a small random sample to check the questions. Cents.
   winnow judge   <timeline.csv>    Ask Jev about every distinct entry. Resumable.
@@ -91,6 +92,10 @@ Common flags
   --threshold <0-1>      Malicious cut for inclusion (default: 0.35)
   --needs-analyst <0-1>  Keep-for-a-human cut (default: 0.6)
   --out <path>           Output file
+
+serve flags
+  --port <n>             Listen port (default: 4774, loopback only)
+  --no-open              Do not open a browser
 
 sample flags
   --n <count>            Sample size (default: 500)

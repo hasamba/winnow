@@ -1,7 +1,10 @@
 node_modules/
 dist/
 *.tsbuildinfo
+# The decision cache, and the WAL sidecars SQLite keeps beside it.
 *.winnow.sqlite
+*.winnow.sqlite-shm
+*.winnow.sqlite-wal
 *.malicious.csv
 *.narrative.md
 *.run.json

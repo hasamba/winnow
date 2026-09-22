@@ -19,6 +19,8 @@ import { narrate } from "./narrate/run.js";
 import { DEFAULT_THRESHOLDS, type Thresholds } from "./types.js";
 import { parseArgs, flagNumber, flagString, flagBool, USAGE, type ParsedArgs } from "./args.js";
 import { loadEnvFiles } from "./env.js";
+import { serve } from "./server/http.js";
+import { DEFAULT_PORT } from "./server/contract.js";
 import { num, usd, duration, percent, bytes, progressLine, endProgress } from "./format.js";
 
 function requireFile(args: ParsedArgs): string {
@@ -321,7 +323,23 @@ async function cmdRun(args: ParsedArgs): Promise<void> {
   }
 }
 
+async function cmdServe(args: ParsedArgs): Promise<void> {
+  const questionsPath = flagString(args.flags, "questions");
+  const { url } = await serve({
+    port: flagNumber(args.flags, "port", envNumber("WINNOW_PORT", DEFAULT_PORT)),
+    ...(questionsPath ? { questionsPath } : {}),
+    open: !flagBool(args.flags, "no-open"),
+  });
+  process.stdout.write(`winnow dashboard: ${url}\n`);
+  process.stdout.write("Loopback only. Press Ctrl-C to stop.\n");
+  // Hold the process open; the server keeps the event loop alive on its own, and a job in
+  // flight must not be cut short by the CLI returning.
+  await new Promise<void>((resolve) => process.once("SIGINT", () => resolve()));
+  process.stderr.write("\nStopped. Verdicts already judged are saved.\n");
+}
+
 const HANDLERS: Record<string, (args: ParsedArgs) => Promise<void>> = {
+  serve: cmdServe,
   scan: cmdScan,
   sample: cmdSample,
   judge: cmdJudge,

@@ -189,6 +189,19 @@ export class DecisionStore {
   }
 
   /**
+   * The SQLite handle, for reads only.
+   *
+   * The dashboard's verdict table needs one SELECT this class has no business owning: a
+   * filter, a sort and a page, all chosen by the analyst per request. Re-expressing that as
+   * a method here would drag HTTP query shapes into the decision cache, so the row query
+   * (src/server/rows.ts) builds its own statement instead. Nothing may WRITE through this —
+   * every write stays a prepared statement on this class, so the schema has one owner.
+   */
+  get readonlyDb(): Database.Database {
+    return this.db;
+  }
+
+  /**
    * Run `fn` inside one SQLite transaction. The scan pass wraps its whole file in this: one
    * transaction for ten million observe() calls is the difference between minutes and hours,
    * because each committed write otherwise pays its own WAL round trip. Nested calls become
@@ -296,6 +309,19 @@ export class DecisionStore {
     const lookup = new Map<string, DecisionRecord>();
     for (const row of rows) lookup.set(row.key_hash, toRecord(row));
     return lookup;
+  }
+
+  /**
+   * Zero every occurrence count and first-seen time, keeping verdicts and errors.
+   *
+   * A scan must be idempotent. `observe` increments, so reading the same file twice counted
+   * every entry twice — and the normal flow does read it twice, because the judge and sample
+   * commands re-scan before they run. That inflated `jev_dupe_count`, a number the analyst
+   * sorts on to find background noise. Verdicts are untouched: they cost money and a re-scan
+   * is not a reason to re-buy them.
+   */
+  resetOccurrences(): void {
+    this.db.prepare("UPDATE decisions SET occurrences = 0, first_seen_ts = ''").run();
   }
 
   /** Category spread and the worst offenders, for the `sample` command's output. */

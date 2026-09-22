@@ -48,6 +48,10 @@ export async function scanTimeline(params: ScanParams): Promise<ScanReport> {
     );
   }
 
+  // A scan re-counts from zero. Without this, scanning the same file twice — which the judge
+  // and sample commands do by design — doubles every occurrence count.
+  store.resetOccurrences();
+
   let totalRows = 0;
   let unparsedTimestamps = 0;
   let earliest = "";

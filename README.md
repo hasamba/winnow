@@ -65,6 +65,22 @@ WINNOW_WORKERS=16
 
 ## Use
 
+### The dashboard
+
+```bash
+winnow serve
+```
+
+Opens a local page at `http://127.0.0.1:4774` with the whole run in it: pick a timeline,
+read the scan and what it will cost, judge a calibration sample and read the verdicts in a
+sortable table beside the editable questions, run the full pass with a progress bar and a
+cost ceiling, export, and read the narrative in the page.
+
+It binds to loopback only. The file picker lists your filesystem, which is safe *because*
+of that and for no other reason, so do not put it behind a tunnel or a reverse proxy.
+
+### The command line
+
 Start with a scan. It costs nothing and tells you what the job will cost.
 
 ```bash

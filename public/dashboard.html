@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>winnow</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="brand">winnow</span>
+        <span class="brand-sub">supertimeline triage</span>
+      </div>
+
+      <div class="topbar-mid">
+        <p id="status-line" class="status" aria-live="polite" role="status">Loading…</p>
+      </div>
+
+      <div class="topbar-right">
+        <span id="conn-state" class="conn conn-idle" data-state="idle">
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span id="conn-text">connecting</span>
+        </span>
+        <span class="hash-chip" title="Verdicts are tied to this questions hash. If it changes, earlier verdicts no longer apply.">
+          questions&nbsp;<code id="questions-hash">—</code>
+        </span>
+        <button type="button" id="theme-toggle" class="btn btn-quiet" aria-pressed="false">
+          Theme
+        </button>
+      </div>
+    </header>
+
+    <p id="hash-warning" class="banner banner-warn" hidden>
+      The questions hash changed during this session. Verdicts judged under the old hash no
+      longer apply and must be judged again.
+    </p>
+
+    <main class="page">
+      <!-- 1. Timeline ------------------------------------------------------------- -->
+      <section class="panel" id="panel-timeline" aria-labelledby="h-timeline">
+        <h2 class="panel-head" id="h-timeline"><span class="step">1</span> Timeline</h2>
+        <p class="panel-note">
+          The browser cannot hand over a real path, so the server lists directories for you.
+          Pick a CSV, or type an absolute path.
+        </p>
+
+        <div class="row-controls">
+          <div class="field grow">
+            <label for="path-input">Absolute path (directory or CSV)</label>
+            <input type="text" id="path-input" spellcheck="false" autocomplete="off"
+                   placeholder="/cases/host01/timeline.csv" />
+          </div>
+          <button type="button" id="path-go" class="btn">Open directory</button>
+          <button type="button" id="path-scan" class="btn btn-primary">Scan this file</button>
+        </div>
+        <p id="path-error" class="inline-error" role="alert" hidden></p>
+
+        <p class="crumb">Current directory: <code id="browse-path">—</code></p>
+        <ul id="browse-list" class="browse"></ul>
+        <p id="browse-error" class="inline-error" role="alert" hidden></p>
+      </section>
+
+      <!-- 2. Scan ----------------------------------------------------------------- -->
+      <section class="panel" id="panel-scan" aria-labelledby="h-scan">
+        <h2 class="panel-head" id="h-scan"><span class="step">2</span> Scan</h2>
+
+        <p id="scan-empty" class="panel-note">No file scanned yet.</p>
+
+        <div id="scan-body" hidden>
+          <p class="crumb">File: <code id="scan-file">—</code></p>
+
+          <div class="scan-grid">
+            <div class="cost-card">
+              <span class="cost-label">Estimated cost of a full judge pass</span>
+              <span class="cost-value" id="scan-cost">$—</span>
+              <span class="cost-time" id="scan-time">—</span>
+              <span class="cost-foot">Scanning is free. This is what the next step spends.</span>
+            </div>
+
+            <dl class="facts">
+              <div class="fact"><dt>Rows</dt><dd id="scan-rows">—</dd></div>
+              <div class="fact"><dt>Flavour</dt><dd id="scan-flavor">—</dd></div>
+              <div class="fact"><dt>Date range</dt><dd id="scan-range">—</dd></div>
+              <div class="fact"><dt>Distinct entries</dt><dd id="scan-distinct">—</dd></div>
+              <div class="fact"><dt>Duplicates</dt><dd id="scan-dupe">—</dd></div>
+              <div class="fact"><dt>Still to judge</dt><dd id="scan-undecided">—</dd></div>
+              <div class="fact"><dt>Unparsed timestamps</dt><dd id="scan-unparsed">—</dd></div>
+              <div class="fact"><dt>Decision cache</dt><dd id="scan-db">—</dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Calibrate ------------------------------------------------------------- -->
+      <section class="panel panel-wide" id="panel-calibrate" aria-labelledby="h-calibrate">
+        <h2 class="panel-head" id="h-calibrate"><span class="step">3</span> Calibrate</h2>
+        <p class="panel-note">
+          Judge a sample for a couple of cents, read the verdicts, and fix the question wording
+          before a full run spends real money.
+        </p>
+
+        <div class="calibrate-grid">
+          <div class="sub">
+            <div class="row-controls">
+              <div class="field narrow">
+                <label for="sample-n">Sample size</label>
+                <input type="number" id="sample-n" value="500" min="1" max="100000" step="50" />
+              </div>
+              <button type="button" id="sample-run" class="btn btn-primary">Judge a sample</button>
+            </div>
+            <p id="sample-error" class="inline-error" role="alert" hidden></p>
+            <p class="panel-note">A sample is drawn at random from the distinct entries.</p>
+
+            <h3 class="sub-head">Distribution</h3>
+            <div id="stats-dist" class="dist">
+              <p class="panel-note">No verdicts yet.</p>
+            </div>
+          </div>
+
+          <div class="sub">
+            <h3 class="sub-head">
+              <label for="questions-text">questions.json</label>
+            </h3>
+            <textarea id="questions-text" class="code-area" rows="18" spellcheck="false"
+                      aria-describedby="questions-feedback"></textarea>
+            <div class="row-controls">
+              <button type="button" id="questions-save" class="btn btn-primary">Save questions</button>
+              <button type="button" id="questions-reload" class="btn">Discard changes</button>
+              <span class="hash-chip">hash&nbsp;<code id="questions-hash-2">—</code></span>
+            </div>
+            <p id="questions-feedback" class="inline-feedback" role="alert" aria-live="polite"></p>
+            <p class="panel-note">
+              Saving a changed question set changes the hash, and every earlier verdict stops
+              applying.
+            </p>
+          </div>
+        </div>
+
+        <h3 class="sub-head">Verdicts</h3>
+        <div class="row-controls filters">
+          <div class="field grow">
+            <label for="rows-q">Free text</label>
+            <input type="search" id="rows-q" placeholder="rundll32, \Temp\, 10.0.0.5" spellcheck="false" />
+          </div>
+          <div class="field narrow">
+            <label for="rows-min">Min score</label>
+            <input type="number" id="rows-min" min="0" max="1" step="0.05" placeholder="0" />
+          </div>
+          <div class="field">
+            <label for="rows-category">Category</label>
+            <select id="rows-category">
+              <option value="">any</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="rows-sort">Sort by</label>
+            <select id="rows-sort">
+              <option value="malicious">score</option>
+              <option value="occurrences">occurrences</option>
+              <option value="time">time</option>
+            </select>
+          </div>
+          <div class="field narrow">
+            <label for="rows-limit">Page size</label>
+            <input type="number" id="rows-limit" value="100" min="10" max="1000" step="10" />
+          </div>
+          <div class="field check">
+            <input type="checkbox" id="rows-undecided" />
+            <label for="rows-undecided">Include unjudged</label>
+          </div>
+          <button type="button" id="rows-refresh" class="btn">Refresh</button>
+        </div>
+        <p id="rows-error" class="inline-error" role="alert" hidden></p>
+
+        <div class="table-wrap">
+          <table class="verdicts" id="rows-table">
+            <caption class="visually-hidden">Verdicts for the distinct timeline entries</caption>
+            <thead>
+              <tr>
+                <th scope="col" class="num">
+                  <button type="button" class="th-sort" data-sort="malicious">score</button>
+                </th>
+                <th scope="col">state</th>
+                <th scope="col">category</th>
+                <th scope="col">severity</th>
+                <th scope="col" class="num">analyst</th>
+                <th scope="col" class="num">
+                  <button type="button" class="th-sort" data-sort="occurrences">count</button>
+                </th>
+                <th scope="col">
+                  <button type="button" class="th-sort" data-sort="time">first seen</button>
+                </th>
+                <th scope="col">source</th>
+                <th scope="col">entry</th>
+              </tr>
+            </thead>
+            <tbody id="rows-body"></tbody>
+          </table>
+        </div>
+
+        <div class="row-controls pager">
+          <button type="button" id="rows-prev" class="btn">Previous</button>
+          <button type="button" id="rows-next" class="btn">Next</button>
+          <p id="rows-summary" class="panel-note" aria-live="polite">—</p>
+        </div>
+      </section>
+
+      <!-- 4. Run -------------------------------------------------------------------- -->
+      <section class="panel" id="panel-run" aria-labelledby="h-run">
+        <h2 class="panel-head" id="h-run"><span class="step">4</span> Run</h2>
+
+        <div class="row-controls">
+          <div class="field narrow">
+            <label for="judge-workers">Workers</label>
+            <input type="number" id="judge-workers" value="16" min="1" max="256" step="1" />
+          </div>
+          <div class="field narrow">
+            <label for="judge-maxcost">Cost ceiling (USD, optional)</label>
+            <input type="number" id="judge-maxcost" min="0" step="0.5" placeholder="none" />
+          </div>
+          <div class="field check">
+            <input type="checkbox" id="judge-rare" checked />
+            <label for="judge-rare">Rare entries first</label>
+          </div>
+          <button type="button" id="judge-start" class="btn btn-primary">Start full judge pass</button>
+          <button type="button" id="judge-cancel" class="btn btn-danger">Cancel</button>
+        </div>
+        <p id="judge-error" class="inline-error" role="alert" hidden></p>
+
+        <div class="progress-block">
+          <p id="progress-label" class="progress-label">Idle</p>
+          <div id="progress" class="progress" role="progressbar" aria-labelledby="progress-label"
+               aria-valuemin="0" aria-valuemax="100" aria-valuetext="idle">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+          </div>
+          <dl class="facts facts-inline">
+            <div class="fact"><dt>Cost so far</dt><dd id="job-cost">$0.0000</dd></div>
+            <div class="fact"><dt>Errors</dt><dd id="job-errors">0</dd></div>
+            <div class="fact"><dt>Decided</dt><dd id="job-decided">—</dd></div>
+            <div class="fact"><dt>Malicious</dt><dd id="job-malicious">—</dd></div>
+          </dl>
+          <p id="ceiling-note" class="banner banner-warn" hidden></p>
+        </div>
+
+        <h3 class="sub-head">Export</h3>
+        <div class="row-controls">
+          <div class="field narrow">
+            <label for="th-malicious">Malicious at or above</label>
+            <input type="number" id="th-malicious" value="0.35" min="0" max="1" step="0.05" />
+          </div>
+          <div class="field narrow">
+            <label for="th-needs">Needs analyst at or above</label>
+            <input type="number" id="th-needs" value="0.6" min="0" max="1" step="0.05" />
+          </div>
+          <div class="field narrow">
+            <label for="th-confident">Confident at or above</label>
+            <input type="number" id="th-confident" value="0.75" min="0" max="1" step="0.05" />
+          </div>
+          <button type="button" id="thresholds-save" class="btn">Save thresholds</button>
+          <button type="button" id="export-run" class="btn btn-primary">Export malicious CSV</button>
+        </div>
+        <p id="export-error" class="inline-error" role="alert" hidden></p>
+        <ul id="artifact-links" class="links"></ul>
+      </section>
+
+      <!-- 5. Narrative --------------------------------------------------------------- -->
+      <section class="panel panel-wide" id="panel-narrative" aria-labelledby="h-narrative">
+        <h2 class="panel-head" id="h-narrative"><span class="step">5</span> Narrative</h2>
+
+        <div class="row-controls">
+          <div class="field">
+            <label for="narrator">Narrator</label>
+            <select id="narrator">
+              <option value="openrouter">openrouter</option>
+              <option value="claude-api">claude-api</option>
+              <option value="claude-cli">claude-cli</option>
+              <option value="codex-cli">codex-cli</option>
+            </select>
+          </div>
+          <div class="field grow">
+            <label for="narrate-model">Model (optional)</label>
+            <input type="text" id="narrate-model" spellcheck="false" autocomplete="off"
+                   placeholder="provider default" />
+          </div>
+          <div class="field check">
+            <input type="checkbox" id="narrate-group" />
+            <label for="narrate-group">Group by host</label>
+          </div>
+          <button type="button" id="narrate-run" class="btn btn-primary">Write the narrative</button>
+        </div>
+        <p id="narrate-error" class="inline-error" role="alert" hidden></p>
+
+        <ul id="narrative-list" class="links"></ul>
+        <article id="narrative-view" class="markdown"></article>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
