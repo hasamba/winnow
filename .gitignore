@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tsbuildinfo
+*.triage.sqlite
+*.malicious.csv
+*.narrative.md
+*.run.json

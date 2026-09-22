@@ -1,0 +1,37 @@
+{
+  "malicious": {
+    "type": "noul",
+    "instructions": "Is this timeline entry evidence of attacker activity on the host?",
+    "criteria": {
+      "true": "Attacker tooling, intrusion, persistence, credential theft, tampering or data theft",
+      "false": "Normal operating system, application, update or user activity"
+    }
+  },
+  "category": {
+    "type": "choice",
+    "instructions": "What kind of activity does this entry record?",
+    "criteria": {
+      "execution": "A program, script or command being run",
+      "persistence": "Something arranged to survive reboot or logoff",
+      "credential_access": "Password, hash, ticket or token theft",
+      "lateral_movement": "Reaching another host",
+      "defense_evasion": "Clearing logs, disabling protection, hiding files",
+      "exfiltration": "Collecting or sending data out",
+      "benign_system": "Routine OS, driver or update activity",
+      "benign_user": "Ordinary use — documents, browsing, applications"
+    }
+  },
+  "severity": {
+    "type": "score",
+    "instructions": "If this is attacker activity, how serious is it?",
+    "criteria": ["Informational", "Low", "Medium", "High", "Critical"]
+  },
+  "needs_analyst": {
+    "type": "noul",
+    "instructions": "Does a human analyst need to look at this entry personally?",
+    "criteria": {
+      "true": "Ambiguous, unusual or high impact",
+      "false": "Clearly routine"
+    }
+  }
+}
