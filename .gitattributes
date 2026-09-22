@@ -1,0 +1,5 @@
+# Test fixtures are evidence: they must check out byte-identical on every platform, or a
+# CRLF-converting checkout silently changes what the parser tests are asserting against.
+tests/fixtures/*.csv -text
+
+* text=auto eol=lf

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { fileURLToPath } from "node:url";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import { parseCsvRecords, parseCsvRecordsFromLines, readLines } from "../src/plaso/csvRead.js";
 
@@ -127,6 +130,31 @@ describe("readLines", () => {
     expect(recs.length).toBe(41); // 1 header + 40 data rows
     const wrapped = recs.find((r) => r.some((c) => c.includes("PSEXESVC.exe\nService Type")));
     expect(wrapped).toBeDefined();
+  });
+
+  it("treats a CRLF file the same as an LF one, quoted fields included", async () => {
+    // A Plaso CSV written on Windows uses CRLF, including inside a quoted multi-line field.
+    // The streaming parser reads through readline and never sees the CR; the sync one sees the
+    // raw text. They must still agree, or the same file deduplicates differently depending on
+    // which path read it, and a stray CR travels into the exported CSV.
+    const lf = 'a,b\nplain,"line one\nline two"\nlast,value\n';
+    const crlf = lf.replace(/\n/g, "\r\n");
+
+    const syncLf = [...parseCsvRecords(lf)];
+    const syncCrlf = [...parseCsvRecords(crlf)];
+    expect(syncCrlf).toEqual(syncLf);
+    expect(syncCrlf[1]?.[1]).toBe("line one\nline two");
+    expect(JSON.stringify(syncCrlf)).not.toContain("\\r");
+
+    const tmp = mkdtempSync(join(tmpdir(), "triage-crlf-"));
+    try {
+      const file = join(tmp, "crlf.csv");
+      writeFileSync(file, crlf);
+      const streamed = await collect(parseCsvRecordsFromLines(readLines(file)));
+      expect(streamed).toEqual(syncLf);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   it("agrees with the sync parser over the whole fixture", async () => {

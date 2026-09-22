@@ -55,10 +55,31 @@ function fakeVerdict(keyText: string): Verdict {
 }
 
 let dir: string;
+let opened: DecisionStore[];
+
+/**
+ * Open a store and remember it, so afterEach can close it. Windows refuses to unlink a file
+ * that still has an open handle, so a store left open fails the temp-directory cleanup with
+ * EBUSY — a failure that never appears on Linux, where unlink succeeds regardless.
+ */
+function openStore(name: string): DecisionStore {
+  const store = DecisionStore.open(join(dir, name));
+  opened.push(store);
+  return store;
+}
+
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "triage-e2e-"));
+  opened = [];
 });
 afterEach(() => {
+  for (const store of opened) {
+    try {
+      store.close();
+    } catch {
+      // Already closed by the test itself; nothing to do.
+    }
+  }
   rmSync(dir, { recursive: true, force: true });
 });
 
@@ -69,7 +90,7 @@ describe.each([
   const source = join(FIXTURES, fixture);
 
   it("scans, judges, exports and round-trips", async () => {
-    const store = DecisionStore.open(join(dir, "case.sqlite"));
+    const store = openStore("case.sqlite");
 
     const report = await scanTimeline({
       filePath: source,
@@ -136,7 +157,7 @@ describe.each([
   });
 
   it("collapses only identical text, and never merges two different addresses", async () => {
-    const store = DecisionStore.open(join(dir, "keys.sqlite"));
+    const store = openStore("keys.sqlite");
     await scanTimeline({ filePath: source, store, questionsHash: QUESTIONS_HASH, concurrency: 1 });
 
     const texts = store.undecided({}).map((r) => r.keyText);
@@ -151,8 +172,7 @@ describe.each([
   });
 
   it("resumes without re-judging what it already decided", async () => {
-    const dbPath = join(dir, "resume.sqlite");
-    const first = DecisionStore.open(dbPath);
+    const first = openStore("resume.sqlite");
     await scanTimeline({ filePath: source, store: first, questionsHash: QUESTIONS_HASH, concurrency: 1 });
 
     const all = first.undecided({});
@@ -162,14 +182,14 @@ describe.each([
     }
     first.close();
 
-    const second = DecisionStore.open(dbPath);
+    const second = openStore("resume.sqlite");
     expect(second.undecided({}).length).toBe(all.length - half);
     expect(second.counts().decided).toBe(half);
     second.close();
   });
 
   it("keeps a row it could not judge, flagged rather than dropped", async () => {
-    const store = DecisionStore.open(join(dir, "errors.sqlite"));
+    const store = openStore("errors.sqlite");
     await scanTimeline({ filePath: source, store, questionsHash: QUESTIONS_HASH, concurrency: 1 });
 
     const pending = store.undecided({});

@@ -57,6 +57,12 @@ export function* parseCsvRecords(text: string, delimiter = ","): Generator<strin
         } else {
           inQuotes = false;
         }
+      } else if (ch === "\r" && text[i + 1] === "\n") {
+        // A CRLF inside a quoted field becomes a bare LF, so this parser agrees with the
+        // streaming one, which reads through readline and never sees the CR. Without this a
+        // Windows-written timeline puts a stray \r inside the value — which then travels into
+        // the deduplication key and out into the exported CSV.
+        continue;
       } else {
         field += ch;
       }
