@@ -27,18 +27,48 @@ git clone https://github.com/hasamba/winnow.git
 cd winnow
 npm install
 npm run build
+npm link          # puts `winnow` on your PATH
 ```
 
-Jev needs an OpenRouter key. It is read from `OPENROUTER_API_KEY`, or from
-`~/.config/typesafe/openrouter.env`. It is never copied into this repository, never
-printed, and never written into any output file.
+`npm link` is what gives you the `winnow` command. Without it, run the tool as
+`winnow <command>` from the project directory instead.
+
+## Keys
+
+Two keys, and they live in different places on purpose.
+
+**Jev** reads `~/.config/typesafe/openrouter.env`. That file sits outside every git repo
+and is never copied into this one.
+
+**The narrating model** reads a `.env` in this directory. Copy the example and fill in
+what you use:
+
+```bash
+cp .env.example .env
+```
+
+```
+ANTHROPIC_API_KEY=...      # for --narrator claude-api
+OPENROUTER_API_KEY=...     # for --narrator openrouter; blank falls back to the file above
+```
+
+`.env` is gitignored. A real environment variable always beats it, so a one-off
+`ANTHROPIC_API_KEY=... winnow narrate ...` still works. The Claude CLI and Codex CLI
+narrators need no key here — they use whatever login those tools already have.
+
+You can also set defaults there and stop retyping flags:
+
+```
+WINNOW_NARRATOR=claude-api
+WINNOW_WORKERS=16
+```
 
 ## Use
 
 Start with a scan. It costs nothing and tells you what the job will cost.
 
 ```bash
-npx tsx src/cli.ts scan /path/to/timeline.csv
+winnow scan /path/to/timeline.csv
 ```
 
 ```
@@ -52,7 +82,7 @@ Then calibrate. This is the step that matters most — it costs about two cents 
 where a badly worded question gets caught, instead of after a ten-dollar run.
 
 ```bash
-npx tsx src/cli.ts sample /path/to/timeline.csv --n 500
+winnow sample /path/to/timeline.csv --n 500
 ```
 
 Read the verdicts it prints. If they do not look like an analyst's, edit `questions.json`
@@ -62,15 +92,15 @@ cannot accidentally mix two question sets in one run.
 Then the real pass, the export, and the narrative:
 
 ```bash
-npx tsx src/cli.ts judge   /path/to/timeline.csv --workers 16 --max-cost 25
-npx tsx src/cli.ts export  /path/to/timeline.csv
-npx tsx src/cli.ts narrate /path/to/timeline.csv.malicious.csv --narrator claude-api
+winnow judge   /path/to/timeline.csv --workers 16 --max-cost 25
+winnow export  /path/to/timeline.csv
+winnow narrate /path/to/timeline.csv.malicious.csv --narrator claude-api
 ```
 
 Or all of it at once:
 
 ```bash
-npx tsx src/cli.ts run /path/to/timeline.csv --narrator claude-api --yes
+winnow run /path/to/timeline.csv --narrator claude-api --yes
 ```
 
 `winnow help` lists every flag.

@@ -5,3 +5,5 @@ dist/
 *.malicious.csv
 *.narrative.md
 *.run.json
+
+.env

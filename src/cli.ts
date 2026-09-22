@@ -18,6 +18,7 @@ import { buildNarrator, type NarratorName } from "./narrate/provider.js";
 import { narrate } from "./narrate/run.js";
 import { DEFAULT_THRESHOLDS, type Thresholds } from "./types.js";
 import { parseArgs, flagNumber, flagString, flagBool, USAGE, type ParsedArgs } from "./args.js";
+import { loadEnvFiles } from "./env.js";
 import { num, usd, duration, percent, bytes, progressLine, endProgress } from "./format.js";
 
 function requireFile(args: ParsedArgs): string {
@@ -70,7 +71,7 @@ async function prepare(args: ParsedArgs): Promise<{
   const store = DecisionStore.open(dbPathFor(args, file));
   store.meta.set("questions_hash", questionsHash);
   store.meta.set("source_file", basename(file));
-  return { file, store, questions, questionsHash, workers: flagNumber(args.flags, "workers", 16) };
+  return { file, store, questions, questionsHash, workers: flagNumber(args.flags, "workers", envNumber("WINNOW_WORKERS", 16)) };
 }
 
 async function ensureScanned(
@@ -283,10 +284,11 @@ async function cmdExport(args: ParsedArgs): Promise<void> {
 
 async function cmdNarrate(args: ParsedArgs): Promise<void> {
   const file = requireFile(args);
-  const name = (flagString(args.flags, "narrator") ?? "claude-api") as NarratorName;
-  const narrator = buildNarrator(name, {
-    ...(flagString(args.flags, "model") ? { model: flagString(args.flags, "model")! } : {}),
-  });
+  const name = (flagString(args.flags, "narrator") ??
+    process.env["WINNOW_NARRATOR"] ??
+    "claude-api") as NarratorName;
+  const model = flagString(args.flags, "model") ?? process.env["WINNOW_MODEL"];
+  const narrator = buildNarrator(name, { ...(model ? { model } : {}) });
   const outPath = flagString(args.flags, "out") ?? `${file.replace(/\.csv$/, "")}.narrative.md`;
 
   process.stderr.write(`Narrating with ${narrator.name} (${narrator.model})\n`);
@@ -307,7 +309,7 @@ async function cmdNarrate(args: ParsedArgs): Promise<void> {
 async function cmdRun(args: ParsedArgs): Promise<void> {
   await cmdJudge(args);
   await cmdExport(args);
-  if (flagString(args.flags, "narrator")) {
+  if (flagString(args.flags, "narrator") ?? process.env["WINNOW_NARRATOR"]) {
     const file = resolve(args.file);
     await cmdNarrate({
       ...args,
@@ -328,7 +330,15 @@ const HANDLERS: Record<string, (args: ParsedArgs) => Promise<void>> = {
   run: cmdRun,
 };
 
+/** A numeric default from the environment, ignoring anything unparseable. */
+function envNumber(name: string, fallback: number): number {
+  const raw = process.env[name];
+  const parsed = raw === undefined ? NaN : Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 async function main(): Promise<void> {
+  loadEnvFiles();
   const args = parseArgs(process.argv.slice(2));
   const handler = HANDLERS[args.command];
   if (!handler) {
